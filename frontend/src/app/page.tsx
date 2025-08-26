@@ -6,7 +6,7 @@ import ThemeToggle from "@/components/theme-toggle";
 
 function UsersTable() {
   return (
-    <section className="max-w-screen-xl mx-auto my-8">
+    <section className="max-w-screen-xl mx-auto my-12">
       <div className="flex justify-between items-center">
         <div className="flex flex-col gap-2">
           <h1 className="text-4xl font-bold">Users Table - Frontend Intern Position Project</h1>

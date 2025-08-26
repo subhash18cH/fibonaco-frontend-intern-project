@@ -9,6 +9,7 @@ IMPORTANT: DO NOT CHANGE OR EDIT THIS FILE.
 from uvicorn import run
 from typing import Optional
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, status, Query, Depends
 
 from sqlalchemy import select, desc, or_
@@ -27,6 +28,13 @@ app = FastAPI(
     description='Frontend Intern\'s Project designed to test NextJs know-how.',
     version='0.1.0',
     root_path='/api',
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_methods=['*'],
+    allow_headers=["*"],
 )
 
 # Setup API Routes
@@ -76,7 +84,7 @@ async def toggle_admin(change: ChangeStatus, database: AsyncSession = Depends(ge
         )
     user.is_superuser = change.is_superuser
     await database.commit()
-    return {'status': 'success', 'message': 'User status updated successfully!'}
+    return {'status': 'success', 'message': f'User {user.name}\'s status updated successfully!'}
 
 @app.get('/users', status_code=status.HTTP_200_OK, response_model=UserResponseModel)
 async def get_paginated_users(
@@ -84,8 +92,8 @@ async def get_paginated_users(
     page: int = Query(1, ge=1), # Defaults to page number 1
     limit: int = Query(10, ge=1), # Number of records to fetch 
     search: Optional[str] = None, # Search String for Name + Email
-    are_superusers: Optional[bool] = None, # Only Fetch Admins
-    are_verified: Optional[bool] = None, # Only Fetch Verified Users
+    are_superusers: Optional[str] = Query(None, pattern="^(superuser|normaluser)$"), # Should Fetch Admins?
+    are_verified: Optional[str] = Query(None, pattern="^(verified|notverified)$"), # Should Fetch Verified Users?
 
     # Database Session
     database: AsyncSession = Depends(get_async_session)
@@ -99,10 +107,10 @@ async def get_paginated_users(
             User.name.ilike(term),
             User.email.ilike(term)
         ))
-    if are_superusers is None:
-        predicates.append(User.is_superuser.is_(are_superusers))
-    if are_verified is None:
-        predicates.append(User.is_verified.is_(are_verified))
+    if are_superusers:
+        predicates.append(User.is_superuser.is_(are_superusers == 'superuser'))
+    if are_verified:
+        predicates.append(User.is_verified.is_(are_verified == 'verified'))
 
     # Fetch the Filtered Rows
     offset = (page - 1) * limit
