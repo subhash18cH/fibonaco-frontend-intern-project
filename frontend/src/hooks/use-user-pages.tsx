@@ -46,12 +46,7 @@ function usePagesAPIQuery<TFilters extends Record<string, unknown> = Record<stri
         result[key] = String(value);
       }
     });
-    if (result.are_superusers) {
-      result.are_superusers = result.are_superusers === "superuser" ? "true" : "false";
-    }
-    if (result.are_verified) {
-      result.are_verified = result.are_verified === "verified" ? "true" : "false";
-    }
+    
     return result;
   }, [filters]);
 
